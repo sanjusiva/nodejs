@@ -1,0 +1,1 @@
+A new file is written by fs.writeFile() method.By default, the file would be replaced if it exists.
