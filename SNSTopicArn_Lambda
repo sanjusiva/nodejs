@@ -1,0 +1,54 @@
+const AWS = require('aws-sdk');
+const sns = new AWS.SNS();
+
+exports.handler = async (event, context) => {
+  try {
+    const environment = process.env.ENVIRONMENT;
+
+    // Retrieve SNS topic ARN from the CloudFormation mappings
+    const snsTopicArn = getSNSTopicArn(environment);
+
+    const emailMessage = {
+      subject: 'Email Subject',
+      message: 'Email Body'
+      // Add more attributes as needed
+    };
+
+    await publishEmailToSNS(snsTopicArn, emailMessage);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify('Email triggered successfully'),
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify('An error occurred while triggering the email'),
+    };
+  }
+};
+
+async function publishEmailToSNS(topicArn, message) {
+  const params = {
+    TopicArn: topicArn,
+    Message: JSON.stringify(message),
+  };
+
+  return sns.publish(params).promise();
+}
+
+function getSNSTopicArn(environment) {
+  const mappings = {
+    dev: {
+      DevMailToPAA: 'arn:aws:sns:us-east-1:123456789012:MyDevPAATopic',
+      DevMailToPSA: 'arn:aws:sns:us-east-1:123456789012:MyDevPSATopic',
+    },
+    prod: {
+      DevMailToPAA: 'arn:aws:sns:us-east-1:123456789012:MyProdPAATopic',
+      DevMailToPSA: 'arn:aws:sns:us-east-1:123456789012:MyProdPSATopic',
+    },
+  };
+
+  return mappings[environment].DevMailToPAA; // Change to the appropriate topic based on your needs
+}
